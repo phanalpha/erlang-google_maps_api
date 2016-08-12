@@ -5,7 +5,9 @@
   {mod, { google_maps_api_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    hackney,
+    hashfs
    ]},
   {env,[]},
   {modules, []},
