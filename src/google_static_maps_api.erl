@@ -130,11 +130,8 @@ staticmap(Parameters) ->
 
 build_query(Qs, []) ->
     Qs;
-build_query(Qs, [{center, #coordinate{lat = Lat, lng = Lng}}|Parameters]) ->
-    Coordinate = hackney_bstr:to_binary( io_lib:format("~f,~f", [Lat, Lng]) ),
-    build_query([{<<"center">>, Coordinate} | Qs], Parameters);
-build_query(Qs, [{center, Address}|Parameters]) ->
-    build_query([{<<"center">>, hackney_bstr:to_binary( Address )} | Qs], Parameters);
+build_query(Qs, [{center, Center}|Parameters]) ->
+    build_query([{<<"center">>, to_binary( Center )} | Qs], Parameters);
 build_query(Qs, [{zoom, Zoom}|Parameters]) ->
     build_query([{<<"zoom">>, hackney_bstr:to_binary( Zoom )} | Qs], Parameters);
 build_query(Qs, [{size, {Width, Height}}|Parameters]) ->
@@ -142,5 +139,22 @@ build_query(Qs, [{size, {Width, Height}}|Parameters]) ->
     build_query([{<<"size">>, hackney_bstr:to_binary( Size )} | Qs], Parameters);
 build_query(Qs, [{scale, Scale}|Parameters]) ->
     build_query([{<<"scale">>, hackney_bstr:to_binary( Scale )} | Qs], Parameters);
+build_query(Qs, [{maptype, Maptype}|Parameters]) ->
+    case lists:member(Maptype, [roadmap, satellite, hybrid, terrain]) of
+	true ->
+	    build_query([{<<"maptype">>, hackney_bstr:to_binary( Maptype )} | Qs], Parameters)
+    end;
+build_query(Qs, [{markers, Markers}|Parameters]) ->
+    build_query([{<<"markers">>, build_markers(Markers)} | Qs], Parameters);
 build_query(Qs, [_Parameter|Parameters]) ->
     build_query(Qs, Parameters).
+
+build_markers({ _Styles, Locations }) ->
+    build_markers( Locations );
+build_markers(Locations) ->
+    hackney_bstr:to_binary( lists:join("|", [to_binary(L) || L <- Locations]) ).
+
+to_binary(#coordinate{lat = Lat, lng = Lng}) ->
+    hackney_bstr:to_binary( io_lib:format("~f,~f", [Lat, Lng]) );
+to_binary(Address) ->
+    hackney_bstr:to_binary( Address ).
